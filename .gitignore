@@ -1,0 +1,12 @@
+RemoteSystemsTempFiles/
+.metadata/
+.classpath
+.project
+.settings/
+target/
+catalog/
+*.class
+bin/
+*.jar
+*.ear
+*.war
