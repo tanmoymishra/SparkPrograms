@@ -1,0 +1,37 @@
+package SparkTest
+
+import org.apache.spark.SparkContext
+import org.apache.spark.SparkConf
+import org.apache.spark.sql.hive.HiveContext
+import org.apache.spark.sql.functions._
+import org.apache.spark.Logging
+
+
+object Test {
+  def main(args: Array[String]) {
+        
+       val conf = new SparkConf() 
+       val sc= new SparkContext(conf)
+      
+       val hc=new HiveContext(sc)
+
+       //hc.setConf("driver-memory", "2g")
+       //hc.setConf("SPARK_REPL_OPTS", "-XX:MaxPermSize=10g")
+              
+       val pl=hc.sql("select * From database.customer").toDF()
+       val ps=hc.sql("select * from database.employee").toDF()
+
+       
+       val Result=pl.join(ps,pl("COUNTRY")===ps("COUNTRY") && pl("dob")===ps("dob")).join(
+       cp2,ps("emp_id")===cp2("cust_id") || ps("emp_no")===cp2("cust_id"),"left").select(
+       lit("").as("emp_first_name"),lit("0").as("emp_sal"),
+       concat(pl("emp_id"),lit("-first"),lit("-name-"),
+       concat(ps("country"),lit("---"),pl("state")).as("country_state"),
+       when(pl("COUNTRY_CODE")==="AU" && pl("cust_id").isNotNull,pl("cust_ID")).otherwise(pl("cust_no")).as("cust_id"),
+       from_unixtime(unix_timestamp()).as("eap_load_dt")
+       )  
+       Result.distinct.write.mode("overwrite").saveAsTable("database.target_table")
+       
+}
+  
+}
