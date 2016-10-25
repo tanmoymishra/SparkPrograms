@@ -1,0 +1,55 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<workflow-app name="SparkTest" xmlns="uri:oozie:workflow:0.5">
+
+  <global>
+	<job-tracker>yarnRM</job-tracker>
+	<name-node>hdfs://apacdev</name-node>
+    <configuration>
+      <property>
+        <name>oozie.launcher.mapred.job.queue.name</name>
+        <value>default</value>
+      </property>
+		<property>
+			<name>oozie.launcher.yarn.app.mapreduce.am.env</name>
+			<value>SPARK_HOME=/opt/cloudera/parcels/CDH/lib/spark</value>
+		</property>
+    </configuration>
+  </global>
+
+  <credentials>
+    <credential name="metastore_credentials" type="hcat">
+      <property>
+        <name>hcat.metastore.uri</name>
+        <value>${hcat_metastore_uri}</value>
+      </property>
+      <property>
+        <name>hcat.metastore.principal</name>
+        <value>${hcat_metastore_principal}</value>
+      </property>
+    </credential>
+  </credentials> 
+  
+	<start to="card_summary" />	
+		<action name="card_summary" cred="metastore_credentials">
+			<spark xmlns="uri:oozie:spark-action:0.1" >
+				<job-tracker>yarnRM</job-tracker>
+				<name-node>hdfs://dev</name-node>
+				<master>yarn</master>
+				<mode>cluster</mode>
+				<name>Customer Summary</name>
+				<class>SparkTest.Test</class>
+				<jar>hdfs://dev/user/tm20361/work/oozie/workflow/lib/Test.jar</jar>
+				<spark-opts>--conf num-executors=20 --properties-file /etc/spark/conf/spark-defaults.conf  --files /etc/hive/conf/hive-site.xml,/etc/spark/conf/log4j.properties --conf spark.yarn.security.tokens.hive.enabled=false</spark-opts>
+				<arg>tm20361.card_summary1</arg>
+			</spark>
+			<ok to="end"/>
+			<error to="fail"/>
+		</action> 
+		<kill name="fail">
+			<message>Workflow failed, error message[${wf:errorMessage(wf:lastErrorNode())}]
+			</message>
+		</kill>
+	<end name="end" />
+</workflow-app>
+
+
